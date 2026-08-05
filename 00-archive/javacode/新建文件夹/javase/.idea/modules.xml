@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/myfunction/Exception/Exception.iml" filepath="$PROJECT_DIR$/myfunction/Exception/Exception.iml" />
+      <module fileurl="file://$PROJECT_DIR$/javase.iml" filepath="$PROJECT_DIR$/javase.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lianxi/lianxi.iml" filepath="$PROJECT_DIR$/lianxi/lianxi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/myThreadpool/myThreadpool.iml" filepath="$PROJECT_DIR$/myThreadpool/myThreadpool.iml" />
+      <module fileurl="file://$PROJECT_DIR$/myfunction/myfunction.iml" filepath="$PROJECT_DIR$/myfunction/myfunction.iml" />
+      <module fileurl="file://$PROJECT_DIR$/myio/myio.iml" filepath="$PROJECT_DIR$/myio/myio.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mysocketcet/mysocketcet.iml" filepath="$PROJECT_DIR$/mysocketcet/mysocketcet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mythread/mythread.iml" filepath="$PROJECT_DIR$/mythread/mythread.iml" />
+      <module fileurl="file://$PROJECT_DIR$/puzzlegame/puzzlegame/puzzlegame.iml" filepath="$PROJECT_DIR$/puzzlegame/puzzlegame/puzzlegame.iml" />
+    </modules>
+  </component>
+</project>
