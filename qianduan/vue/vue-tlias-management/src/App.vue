@@ -1,9 +1,9 @@
 <script setup>
-import EmpList from './views/EmpList.vue'
+
 </script>
 
 <template>
-  <EmpList></EmpList>
+  <RouterView></RouterView>
 </template>
 
 <style scoped>
