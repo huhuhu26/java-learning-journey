@@ -14,7 +14,7 @@ public interface EmpService {
 
     void save(Emp emp);
 
-    //根据id批量散出
+    //根据id批量删除
     void delete(List<Integer> ids);
 
     //根据id回显

@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import router from '../router'
 
 //创建axios实例对象
 const request = axios.create({
@@ -6,14 +8,39 @@ const request = axios.create({
   timeout: 600000
 })
 
-//axios的响应 response 拦截器
-request.interceptors.response.use(
-  (response) => { //成功回调
-    return response.data
+
+//axios的请求 request 拦截器--获取jwt令牌
+request.interceptors.request.use(
+  (config) => { //成功回调
+    const loginUser = JSON.parse(localStorage.getItem('loginUser'));
+    if(loginUser && loginUser.token){
+      config.headers.token = loginUser.token;
+    }
+    return config
   },
   (error) => { //失败回调
     return Promise.reject(error)
   }
 )
 
-export default request
+
+//axios的响应 response 拦截器
+request.interceptors.response.use(
+  (response) => { //成功回调
+    return response.data;
+  },
+  (error) => { //失败回调
+    if(error.response&&error.response.status === 401){
+      //提示登录超时
+      ElMessage.error('登录超时，请重新登录');
+      //跳转到登录页面
+      router.push('/login');
+
+    }else{
+      ElMessage.error("接口访问异常");
+    }
+    return Promise.reject(error);
+  }
+)
+
+export default request 

@@ -10,6 +10,8 @@ onMounted(() => {
 })
 
 
+const deptList = ref([])
+
 //查询
 const search = async () => {
   const request = await queryAllApi();
@@ -18,7 +20,7 @@ const search = async () => {
   }
 }
 
-const deptList = ref([])
+
 
 //Dialog对话框
 const dialogFormVisible = ref(false);
@@ -112,6 +114,9 @@ const delById = async (id) => {
     ElMessage.info('已取消删除');
   })
 }
+
+
+
 
 </script>
 

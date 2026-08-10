@@ -1,7 +1,12 @@
 <script setup>
 import { ref,watch,onMounted } from 'vue'
-import {queryPageApi} from '@/api/emp'
+import {queryPageApi,addApi,queryInfoApi,updateApi,deleteApi } from '@/api/emp'
 import {queryAllApi as queryAllDeptApi} from '@/api/dept'
+import {ElMessage,ElMessageBox} from 'element-plus'
+
+//token
+const token = ref('');
+
 
 //元数据
 //职位列表数据
@@ -35,10 +40,18 @@ onMounted(() =>{
   queryAllDepts();//查询所有部门数据
 })
 
+//获取token
+const getToken = async () => {
+  const loginUser = JSON.parse(localStorage.getItem('loginUser'));
+  if(loginUser&&loginUser.token){
+    token.value = loginUser.token;
+  }
+}
+
 //查询所有部门数据
 const queryAllDepts = async () => {
-  const result = await queryAllApi();
-  if(rq1esult.code){
+  const result = await queryAllDeptApi();
+  if(result.code){
     depts.value = result.data;
 
   }
@@ -112,6 +125,23 @@ const handleCurrentChange = (val) => {
 const addEmp = () => {
   dialogVisible.value = true;
   dialogTitle.value = '新增员工'
+  employee.value = {
+    username: '',
+    name: '',
+    gender: '',
+    phone: '',
+    job: '',
+    salary: '',
+    deptId: '',
+    entryDate: '',
+    image: '',
+    exprList: []
+  }
+
+  //重置表单校验规则
+  if(empFormRef.value){
+    empFormRef.value.resetFields();
+  }
 }
 
 
@@ -149,6 +179,162 @@ const beforeAvatarUpload = (rawFile) => {
   }
   return true
 }
+
+//添加工作经历
+const addExprItem = () => {
+  employee.value.exprList.push({company: '', job: '',begin: '',end: '',exprDate: [] });
+
+}
+
+
+//删除工作经历
+const delExprItem = (index) => {
+  employee.value.exprList.splice(index,1);
+
+}
+
+//侦听-employee员工对象的工作经历
+watch(() => employee.value.exprList,(newVal,oldVal) => {
+  if(employee.value.exprList && employee.value.exprList.length > 0){
+    employee.value.exprList.forEach((expr) => {
+      expr.begin = expr.exprDate[0];
+      expr.end = expr.exprDate[1];
+    })
+    
+  }
+},{deep: true})
+
+//保存员工
+const save = async () => {
+  //表单校验
+  if(!empFormRef.value)return;
+    empFormRef.value.validate(async (valid) => {
+    if(valid){
+      let result;
+      if(employee.value.id){
+        result = await updateApi(employee.value);
+      }else{
+        result = await addApi(employee.value);
+      }
+      
+      if(result.code){
+      //提示信息
+        ElMessage.success('操作成功')
+        //关闭对话框
+        dialogVisible.value = false;
+        //查询
+        search();
+      }else{
+        ElMessage.error(result.msg);
+    }
+      
+    }else{
+      
+      ElMessage.error('请填写正确的数据')
+    }
+  })
+
+
+  
+}
+
+
+//表单引用
+const empFormRef = ref();
+
+
+//表单校验规则
+const rules = ref({ 
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 2, max: 20, message: '用户名长度应在2到20个字符之间', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 2, max: 10, message: '姓名长度应在2到10个字符之间', trigger: 'blur' }
+  ],
+  gender: [
+    { required: true, message: '请选择性别', trigger: 'change' }
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号', trigger: 'blur' }
+  ]
+});
+
+//编辑
+const edit = async (id) => { 
+  const result = await queryInfoApi(id);
+  if(result.code){
+    dialogVisible.value = true;
+    dialogTitle.value = '编辑员工'
+    employee.value = result.data;
+
+
+    //对工作经历进行处理
+    let exprList = employee.value.exprList;
+    if(exprList && exprList.length > 0){
+      exprList.forEach((expr) => {
+        expr.exprDate = [expr.begin,expr.end];
+      })
+    }
+  }
+}
+
+//删除
+const deleteById = async (id) => { 
+  ElMessageBox.confirm('此操作将永久删除该部门, 是否继续?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    const result = await deleteApi(id);
+    if(result.code){
+      ElMessage.success('删除成功');
+      search();
+    }else{
+      ElMessage.error(result.message);
+    }
+  }).catch(() => {
+    ElMessage.info('已取消删除');
+  })
+}
+
+//记录勾选员工的id
+const selectedIds = ref([]);
+
+
+//勾选框发生变化时触发
+const handleSelectionChange = (selection) => {
+  selectedIds.value = selection.map(item => item.id);
+}
+
+//批量删除
+const deleteByIds = async () => { 
+  ElMessageBox.confirm('此操作将永久删除该部门, 是否继续?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    if(selectedIds.value && selectedIds.value.length > 0){
+      const result = await deleteApi(selectedIds.value);
+      if(result.code){
+        ElMessage.success('删除成功');
+        search();
+      }else{
+        ElMessage.error(result.message);
+      }
+    }else{
+      ElMessage.error('您没有选择任何要删除的数据');
+
+    }
+    
+  }).catch(() => {
+    ElMessage.info('已取消删除');
+  })
+}
+
+
 
 </script>
 
@@ -192,9 +378,9 @@ const beforeAvatarUpload = (rawFile) => {
   <!-- 功能按钮 -->
    <div class="container">
     <el-button type="primary" @click="addEmp">新增员工</el-button>
-    <el-button type="danger" @click="batchDelete">批量删除</el-button>
+    <el-button type="danger" @click="deleteByIds">批量删除</el-button>
 
-    <el-table :data="empList" border style="width: 100%">
+    <el-table :data="empList" border style="width: 100%"  @selection-change="handleSelectionChange">
     <el-table-column type="selection" width="55" align="center"/>
     <el-table-column prop="name" label="姓名" width="120" align="center" />
     <el-table-column prop="gender" label="性别" width="120" align="center">
@@ -223,8 +409,8 @@ const beforeAvatarUpload = (rawFile) => {
     <el-table-column label="操作"  width="180" align="center">
 
       <template #default="scope">
-        <el-button type="primary" size="small" @click=""><el-icon><EditPen /></el-icon>编辑</el-button>
-        <el-button type="primary" size="small" @click=""><el-icon><Delete /></el-icon>删除</el-button>
+        <el-button type="primary" size="small" @click="edit(scope.row.id)"><el-icon><EditPen /></el-icon>编辑</el-button>
+        <el-button type="primary" size="small" @click="deleteById(scope.row.id)"><el-icon><Delete /></el-icon>删除</el-button>
       </template>
 
     </el-table-column>
@@ -248,18 +434,18 @@ const beforeAvatarUpload = (rawFile) => {
 
    <!-- 新增员工/修改员工对话框 -->
    <el-dialog v-model="dialogVisible" :title="dialogTitle">
-      <el-form :model="employee" label-width="80px">
+      <el-form :model="employee" :rules="rules" ref="empFormRef" label-width="80px">
         <!-- 基本信息 -->
         <!-- 第一行 -->
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="用户名">
+            <el-form-item label="用户名" prop="username">
               <el-input v-model="employee.username" placeholder="请输入员工用户名，2-20个字"></el-input>
             </el-form-item>
           </el-col>
           
           <el-col :span="12">
-            <el-form-item label="姓名">
+            <el-form-item label="姓名" prop="name">
               <el-input v-model="employee.name" placeholder="请输入员工姓名，2-10个字"></el-input>
             </el-form-item>
           </el-col>
@@ -268,7 +454,7 @@ const beforeAvatarUpload = (rawFile) => {
         <!-- 第二行 -->
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="性别">
+            <el-form-item label="性别" prop="gender">
               <el-select v-model="employee.gender" placeholder="请选择性别" style="width: 100%;">
                 <el-option v-for="g in genders" :key="g.value" :label="g.name" :value="g.value"></el-option>
               </el-select>
@@ -276,7 +462,7 @@ const beforeAvatarUpload = (rawFile) => {
           </el-col>
 
           <el-col :span="12">
-            <el-form-item label="手机号">
+            <el-form-item label="手机号" prop="phone">
               <el-input v-model="employee.phone" placeholder="请输入员工手机号"></el-input>
             </el-form-item>
           </el-col>
@@ -303,7 +489,7 @@ const beforeAvatarUpload = (rawFile) => {
           <el-col :span="12">
             <el-form-item label="所属部门">
               <el-select v-model="employee.deptId" placeholder="请选择部门" style="width: 100%;">
-                <el-option v-for="d in depts" :key="d.id" :label="d.name" value="d.id"></el-option>
+                <el-option v-for="d in depts" :key="d.id" :label="d.name" :value="d.id"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -320,6 +506,7 @@ const beforeAvatarUpload = (rawFile) => {
             <el-form-item label="头像">
               <el-upload
                 class="avatar-uploader"
+                :headers="{'token' : token}"
                 action="/api/upload"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
@@ -335,37 +522,37 @@ const beforeAvatarUpload = (rawFile) => {
 
         <!-- 工作经历 -->
         <!-- 第六行 -->
-        <el-row :gutter="10">
+        <el-row :gutter="10"">
           <el-col :span="24">
             <el-form-item label="工作经历">
-              <el-button type="success" size="small" @click="">+ 添加工作经历</el-button>
+              <el-button type="success" size="small" @click="addExprItem">+ 添加工作经历</el-button>
             </el-form-item>
           </el-col>
         </el-row>
         
         <!-- 第七行 ...  工作经历 -->
-        <el-row :gutter="3">
+        <el-row :gutter="3" v-for="(expr,index) in employee.exprList">
           <el-col :span="10">
             <el-form-item size="small" label="时间" label-width="80px">
-              <el-date-picker type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" ></el-date-picker>
+              <el-date-picker type="daterange" v-model="expr.exprDate" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" ></el-date-picker>
             </el-form-item>
           </el-col>
 
           <el-col :span="6">
             <el-form-item size="small" label="公司" label-width="60px">
-              <el-input placeholder="请输入公司名称"></el-input>
+              <el-input placeholder="请输入公司名称" v-model="expr.company"></el-input>
             </el-form-item>
           </el-col>
 
           <el-col :span="6">
             <el-form-item size="small" label="职位" label-width="60px">
-              <el-input placeholder="请输入职位"></el-input>
+              <el-input placeholder="请输入职位" v-model="expr.job"></el-input>
             </el-form-item>
           </el-col>
 
           <el-col :span="2">
             <el-form-item size="small" label-width="0px">
-              <el-button type="danger" >- 删除</el-button>
+              <el-button type="danger" @click="delExprItem(index)">- 删除</el-button>
             </el-form-item>
           </el-col>
         </el-row>
@@ -375,7 +562,7 @@ const beforeAvatarUpload = (rawFile) => {
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="">保存</el-button>
+          <el-button type="primary" @click="save">保存</el-button>
         </span>
       </template>
   </el-dialog>
