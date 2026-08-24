@@ -22,7 +22,7 @@ public class TokenInterceptor implements HandlerInterceptor {
         }
 
         //获取token
-        String token = request.getHeader("token");
+        String token = request.getHeader(" token");
 
         if(token == null||token.isEmpty()){
             log.info("令牌为空，响应401");

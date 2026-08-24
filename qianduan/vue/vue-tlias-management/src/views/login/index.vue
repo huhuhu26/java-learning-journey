@@ -77,8 +77,8 @@
   font-weight: bold;
 }
 
-.button {
+/* .button {
   margin-top: 30px;
   width: 120px;
-}
+} */
 </style>
