@@ -20,7 +20,7 @@ public class MvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginIntercepter(stringRedisTemplate))
                 .excludePathPatterns("/user/login","/user/register","/user/code",
-                        "/blog/hot","/blog/detail/*","/shop/**","/shop-type/**").order(1);
+                        "/blog/hot","/blog/detail/*","/shop/**","/shop-type/**","/voucher/**","/upload/**").order(1);
         registry.addInterceptor(new RefreshTokenintercepter(stringRedisTemplate)).order(0);
     }
 }
